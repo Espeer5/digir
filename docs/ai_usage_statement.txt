@@ -1,0 +1,75 @@
+###################################################################################################
+#  DIGIR AI USAGE STATEMENT
+#
+#  VERSION 0.1
+###################################################################################################
+
+This document describes the ways in which AI has and has not been used in the completion of the
+digiR project.
+
+###################################################################################################
+#  CHANGE LOG
+###################################################################################################
+
+7/18/26  Edward Speer  Initial revision
+
+###################################################################################################
+#  USAGE STATEMENT
+###################################################################################################
+
+Some of the primary objectives of this project include education and reproducability. AI can be an
+extremely powerful tool for assisting these objectives, but only when interacted with in specific
+ways. For example, asking an LLM to explain a certain concept or technical requirement can be much
+more effective than a web search. The ability to ask follow-up questions in particular can replace
+a lot of manual research and allow rapid learning. However, not all uses of AI achieve this goal -
+in particular asking an agent to design a subsystem or write the code can bypass the learning
+process altogether. It is of course, still possible to learn this way when time and care is taken
+to understand the outputs, but I personally feel that I don't learn as well this way as I do in the
+process of manually producing the components. For this reason I have developed a brief set of
+guidelines that describe the guardrails I will apply to the use of AI in this project. When working
+with this project, feel free to use AI however you like to your heart's content -- these are merely
+my own guardrails to hold myself to in order to promote my own learning and objectives.
+
+### GUARDRAILS ###
+
+1: Chat mode only
+
+One major point of emphasis for this project is that I learn best by doing, and I want to manually
+write the code and create the schematics. For this reason I don't want to set agents loose into the
+workspace to go and build things for me.
+
+2: No debugging
+
+AI is very good at debugging, but doing it manually is satisfying to me and helps me avoid making
+repeat mistakes in the future. I also intend to work with some unfamiliar languages during the
+course of the project and learning the syntax rather than asking an LLM to fix it is very valuable
+for language mastery.
+
+3: Always ask for sources
+
+Not because I don't believe the AI outputs are accurate -- they typically are. Instead, I want to
+know what sources should be consulted to find the answers to the questions I have. Also, I'm doing
+this project because I'm interested in the project topic, and I suspect that the sources the LLM
+cites will prove interesting enough to read through, providing additional learning.
+
+4: Log interactions
+
+It may be valuable or interesting for those following this project to see how AI has been used in
+different phases of the project. After consulting with AI, record brief logs of how it was used and
+what was learned in the process for transparency to others. Logs will be kept below in this
+document.
+
+###################################################################################################
+#  USAGE LOGS
+###################################################################################################
+ _________________________________________________________________________________________________
+| DATE     | MODEL   | USE CASE                      | NOTES                                      |
+|----------|---------|-------------------------------|--------------------------------------------| 
+| 07/18/26 | GPT 5.6 | Technical specs for RF module | Primary source cited and used for spec dev |
+|          |         | to support digital modes      | was the WSJT-X protocol specification.     |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 07/20/26 | GPT 5.6 | Scraping web for dev kits to  | Due to memory shortage everything is       |
+|          |         | purchase at reasonable prices | pricy, and AI didn't really help.          |
+|----------|---------|-------------------------------|--------------------------------------------|
+ -------------------------------------------------------------------------------------------------
+

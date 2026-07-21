@@ -1,0 +1,103 @@
+###################################################################################################
+#  BASEBAND PROCESSING MODULE SPECIFICATION
+#
+#  VERSION 0.1
+###################################################################################################
+
+This document decribes the baseband processing module (BPM) hardware module.
+
+###################################################################################################
+#  CHANGE LOG
+###################################################################################################
+
+7/18/26  Edward Speer  Initial Revision
+
+###################################################################################################
+#  INTERFACES
+###################################################################################################
+
+ - RF Baseband I/Q
+ - System control (SPI)
+ - Bidirectional audio for user control module
+ - Data from user input (protocol TBD)
+ - Debug (JTAG)
+
+###################################################################################################
+#  INPUTS
+###################################################################################################
+
+ _________________________________________________________________________________________________
+| SIGNAL    | SOURCE    | PROTOCOL        | LEVEL           | FEED POINT       | DETAIL           |
+|-----------|-----------|-----------------|-----------------|------------------|------------------|
+| Power     | PSM       | N/A             | +5V             | Common 5V rail   |                  |
+|-----------|-----------|-----------------|-----------------|------------------|------------------|
+| Ground    | N/A       | N/A             | GND             | Common GND rail  | Common across    |
+|           |           |                 |                 |                  | all modules      |
+|-----------|-----------|-----------------|-----------------|------------------|------------------|
+| I-samples | RF module | LVDS            | N/A             | FPGA             |                  |
+|-----------|-----------|-----------------|-----------------|------------------|------------------|
+| Q-samples | RF module | LVDS            | N/A             | FPGA             |                  |
+|-----------|-----------|-----------------|-----------------|------------------|------------------|
+| User ctrl | UCM       | SPI             | 3v3             | MCU              |                  |
+ -------------------------------------------------------------------------------------------------
+
+###################################################################################################
+#  OUTPUTS
+###################################################################################################
+
+ _________________________________________________________________________________________________
+| SIGNAL    | DESTINATION | PROTOCOL        | LEVEL           | DETAIL                            |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| I-samples | RF module   | LVDS            | N/A             |                                   |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| Q-samples | RF module   | LVDS            | N/A             |                                   |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| TX enable | RF module   | N/A             | 3v3             |                                   |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| RX enable | RF module   | N/A             | 3v3             |                                   |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| CTRL bus  | RF module   | TBD             | TBD             |                                   |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| Aud out   | UCM         | PWM             | 3v3             |                                   |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| Usr data  | UCM         | TBD             | TBD             |                                   |
+|-----------|-------------|-----------------|-----------------|-----------------------------------|
+| RF clk    | RF module   | N/A             | 3v3             |                                   |
+ -------------------------------------------------------------------------------------------------
+
+###################################################################################################
+#  FUNCTIONAL BLOCKS
+###################################################################################################
+
+The baseband processing module hardware and software combine to implement a series of functional
+blocks:
+ - Digital baseband interface -- I/Q over LVDS to and from the RF module
+ - Upconverter/Downconverter (DUC/DDC) -- Sample rate conversion, filtering, frequency translation
+ - Modulation/demodulation -- Supports analog FM plus digital waveforms
+ - Forward error correction -- Enc/dec
+ - Framing & protocol engine -- packet framing, synchronization, CRC, etc.
+ - Audio DSP
+ - System control processing
+ - Timing/Clock tree -- time recovery, RF sample clock, TOD alignment, reference steering
+ - HAL
+
+###################################################################################################
+#  COMPONENTS
+###################################################################################################
+
+### MCU ###
+
+The selected processor for this project is the STM32, with the final variant TBD, though likely
+STM32H747XI. Initial prototypes will use an STM32 dev board with whatever variant is available in
+the right budget ballpark.
+
+This combines a cortex-M7 and a cortex-M4 and is a common choice for consumer grade products of
+size and complexity, making it a great fit for this project.
+
+### FPGA ###
+
+The selected FPGA for this project is the lattice ECP5. It's difficult to find FPGAs with fully
+open toolchains -- this one qualifies and should have plenty of resources for the project's needs.
+
+
+

@@ -1,0 +1,270 @@
+###################################################################################################
+#  DIGIR MASTER PROJECT SPEC
+#
+#  VERSION 0.1
+###################################################################################################
+
+This document defines the system-level requirements for the DigiR open-source amateur radio
+platform.
+
+###################################################################################################
+#  CHANGE LOG
+###################################################################################################
+
+7/17/26  Edward Speer  Initial revision
+7/18/26  Edward Speer  Add user control module & rename BPM
+
+###################################################################################################
+#  SYSTEM DESCRIPTION
+###################################################################################################
+
+DigiR is an open-source, modular digital transceiver designed for standalone mobile amateur radio
+operation on digital modes. It consists of a reusable hardware design with extensible enbedded
+software, which can be adapted to multiple modes of digital operation. The system is designed to
+support education, experimentation, and genuine modern digital radio communications using open
+development workflows.
+
+Platform capabilities should include:
+ - Self-contained HF digital transceiver operation
+ - Mutliple digital communication modes
+ - Battery-powered operation
+ - Precise GNSS-disciplined timing
+ - Open hardware interfaces
+ - Open software interfaces
+ - Field portability
+ - Field firmware & FPGA upgrades 
+
+###################################################################################################
+#  TOP-LEVEL BLOCK DIAGRAM
+###################################################################################################
+
+                   ______________            ______________________________
+                  |              |    5V    |                              |
+                  | POWER MODULE |--------->| RF MODULE                    |
+                  |              |          |   ___________     _________  |
+                   --------------\   12V    |  |           |   |         | |
+                         |        \---------|->| POWER AMP |-->| ANTENNA | |
+                         | 5V         TX    |  |           |   |         | |
+                         v       /--------->|   -----------     ---------  |
+                   _____________/           /------------------------------
+                  |             |     RX   /      
+                  | BASEBAND    |<--------/  _____________________
+                  | PROCESSING  |           |                     |
+                  | MODULE      |<----------| USER CONTROL MODULE |
+                  |             |    SPI    |                     |
+                   -------------             ---------------------
+
+
+###################################################################################################
+# PERFORMANCE REQUIREMENTS
+###################################################################################################
+
+RF targets:
+ - Full amateur general HF coverage (3-30MHz)
+ - 96kHz+ ADC instantaneous bandwidth
+ - 48kHz+ Usable processed bandwidth
+ - 4+ Independently tunable DSP channels
+ - 50Hz or less narrowest channels filter
+ - 7dB or less receiver noise across supported bands
+ - Blocking 60dB at 3kHz, 75dB at 25hHz
+ - Minimum discernible signal (MDS) -125 dBm
+ - Input damage threshold 10dB or higher
+ - 10W+ TX output power
+
+Frequency & Timing:
+ - +/- 0.1ppm with GNSS locked
+ - +/- 0.1ppm 10 minute holdover
+ - +/- 0.5 ppm in freerun
+ - Frequency tuning resolution 0.1Hz or less
+ - 1us TOD offset, 1ms in holdover
+ - 100us TX schedule error, 1ms in holdover
+
+Power Consumption:
+ - RX 15W, TX at 30-50W
+ - Maximum transient draw: 65W
+
+Required Modes (initial prototype):
+ - FT8
+ - APRS
+
+###################################################################################################
+#  HARDWARE DESCRIPTION
+###################################################################################################
+
+The hardware will consist of 3 modules which are connected across clearly documented electrical and
+mechanical interfaces. Each module will have its own revision identifier and documentation. The
+modules are:
+1) Power Module: Responsible for safely charging and discharging the battery and providing properly
+                 regulated power to all subsystems.
+
+2) Baseband Processing Module: Resonsible for all messaging logic and the encoding/decoding of
+                               symbols to RF.
+
+3) User Control Module: Control surface for users to provide input and configuration, as well as
+                        monitor status and operation.
+
+4) RF Module: Responsible for operating the antenna to transmit and receive
+              signals over the air.
+
+### POWER MODULE ###
+
+The role of the power module is to provide clean and regulated power to the device. It will support
+3 classes of inputs:
+1: Internal battery
+2: External DC input
+3: Charging input
+
+The power module needs to support the following output modes:
+1: Baseband processing module regulated supply at 5V, 20W max allocation
+2: RF auxiliary supply at 5V, 7.5W max allocation
+3: Power amplifier supply at 13.8V, 40W allocation
+
+The power module operates as a state machine with the following states available:
+ - Mechanical off/battery disconnect
+ - Shipping state (electrically disconnected)
+ - Standby
+ - EncDec powered only
+ - Rx enabled
+ - Tx ready
+ - Tx active
+ - Charging
+ - Fault shutdown (E-stop)
+
+The power amplifier supply should be shutoff (reversion to Rx enabled state) when any fault
+condition is triggered.
+
+The power module needs to expose status data to the user input module for user monitoring. The
+minimum set is:
+ - Battery voltage
+ - Battery current
+ - Ext input voltage
+ - Ext input current
+ - Rail voltages and currents
+ - Battery temperature
+ - Charge status
+ - Fault state
+
+### BASEBAND PROCESSING MODULE ###
+
+The role of the baseband processing module (BPM) is to provide protocol intelligence, DSP, timing,
+logging, and host capabilities. It is the logical brain of the device. There are several subsystems
+included.
+
+ ________________________________________________________________________
+|                                                    |                   | 
+| BASEBAND PROCESSING MODULE                         |                   |
+|  __________________                                |                   |
+| |                  |                               |                   |
+| | DATA CONVERSION  |                               |                   |
+| |  _____   _____   |                               |                   |
+| | | ADC | | DAC |  |                               |                   |
+| |  -----   -----   |                               |                   |
+|  ------------------                                |                   |
+|  ^^^^^^^^^^^^^^^^^^                                |                   |
+|  ||||||||||||||||||                                |                   |
+|  vvvvvvvvvvvvvvvvvv                                |                   |
+|  __________________     _________________________  |                   |
+| |                  |<->|                         | |                   |
+| |    PROCESSING    |<->| MEMORY/STORAGE          | |     Protocol      | 
+| |  ______   _____  |<->|  _____   _____   _____  | |    Interfaces     |
+| | | FPGA | | MCU | |<->| | VOL | | NVM | | USR | | |                   |
+| |  ------   -----  |<->|  -----   -----   -----  | |                   |
+|  ------------------     -------------------------  |                   |
+|  ^^^^^^^^^^^^^^^^^^                                |                   |
+|  ||||||||||||||||||                                |                   | 
+|  vvvvvvvvvvvvvvvvvv                                |                   |
+|  __________________                                |                   |
+| |                  |                               |                   |
+| | CLOCKS & TIMING  |                               |                   |
+| |     ________     |                               |                   |
+| |    | VCTCXO |    |                               |                   |
+| |     --------     |                               |                   |
+| |  ______   _____  |                               |                   |
+| | | GNSS | | GEN | |                               |                   |
+| |  ------   -----  |                               |                   |
+|  ------------------                                |                   |
+ ------------------------------------------------------------------------
+
+The NVM holds the bootloader, primary firmware image, and FPGA configuration image, while the
+volatile memory is used for runtime data. Some partition of memory is exposed for user data.
+Detailed descriptions of each subsystem in the BPM can be found in the detailed docs for the
+BPM module.
+
+### USER CONTROL MODULE ###
+
+The user input module consists of the following components, whose functionality is mode dependent
+and configurable.
+ - Touchscreen: provides display including status & waterfall, and controls including keypad & mode
+                selection.
+ - PTT switch: available for any phone modes, though the additional target modes do not include
+               phone operation.
+ - Power Switch
+ - 3 rotary knobs: adopt different functions dependent on mode of operation. 
+
+Other than the power switch which is directly in series with the power unit, the other controls
+control the baseband processing unit through SPI to the MCU.
+
+### RF MODULE ###
+
+The RF module is composed of a concrete set of components, and is designed to be hot swappable
+depending on the desired operating constraints. Components include:
+ - Receiver
+ - Transmit exciter
+ - Power amplifier
+ - Frequency synthesis
+ - Band filtering
+ - T/R switching
+ - Measurement
+ - Protection
+ - Control & telemetry
+
+###################################################################################################
+#  SOFTWARE DESCRIPTION
+###################################################################################################
+
+The software architecture is both vertically and horizontally divided - horizontally between the
+FPGA and the MCU, and vertically up the stack from driver to application level. The vertical layers
+are:
+1: Device Drivers
+2: Hardware Services
+3: DSP Services
+4: Protocol Layer
+5: Application Layer
+
+Differentiated revision identifiers are distributed horizontally, to the FPGA and firmware
+separately. 
+
+### FPGA RESPONSIBILITIES ###
+
+ - Streaming DSP
+ - Filtering
+ - FFT
+ - Sample buffering
+ - Time recovery
+ - Hardware sync
+ - DMA support
+
+### FIRMWARE RESPONSIBILITIES ###
+
+ - Radio control
+ - Scheduling
+ - User interface
+ - Communications
+ - Protocol implementation
+ - Calibration
+ - System health monitoring
+
+Protocol implementations will be fully modular and use a standardized interface with the rest of
+the system. 
+
+### HOST SOFTWARE RESPONSIBILITIES ###
+
+A number of host software capabilities must be provided to enable hacking on the platform:
+ - Firmware updates
+ - FPGA programming
+ - Diagnostics & logging
+ - Factory test
+ - Development utils
+
+The software project should have cross-architecture support and not require any proprietary
+licensed software.
