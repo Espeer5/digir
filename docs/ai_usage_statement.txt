@@ -8,12 +8,6 @@ This document describes the ways in which AI has and has not been used in the co
 digiR project.
 
 ###################################################################################################
-#  CHANGE LOG
-###################################################################################################
-
-7/18/26  Edward Speer  Initial revision
-
-###################################################################################################
 #  USAGE STATEMENT
 ###################################################################################################
 
@@ -71,5 +65,16 @@ document.
 | 07/20/26 | GPT 5.6 | Scraping web for dev kits to  | Due to memory shortage everything is       |
 |          |         | purchase at reasonable prices | pricy, and AI didn't really help.          |
 |----------|---------|-------------------------------|--------------------------------------------|
+| 07/23/26 | GPT 5.6 | Use of open source tools for  | Pointed me directly to                     |
+|          |         | synthesizing/flashing ECP5    | jjhorton.co.uk/posts/ecp5g-eval/ which     |
+|          |         | hardware.                     | provided all the answers I needed.         |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 07/24/26 | GPT 5.6 | Table-based testbench inSV.   | Provided a great pattern, but it isn't     |
+|          |         |                               | supported by Icarus. Gave me a different   |
+|          |         |                               | way of doing it that I don't really like.  |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 07/25/26 | GPT 5.6 | Discussion of general design  | Referred to generic documents about PI     |
+|          |         | of time servo.                | control that were too basic, but provided  |
+|          |         |                               | useful guidance on fixed-point usage.      |
  -------------------------------------------------------------------------------------------------
 

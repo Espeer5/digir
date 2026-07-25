@@ -9,6 +9,7 @@
 ###################################################################################################
 
 # 7/23/26  Edward Speer  Initial revision
+# 7/24/26  Edward Speer  Add test recipe
 
 ###################################################################################################
 #  RECIPES
@@ -42,4 +43,7 @@ program_fpga: configure
 
 flash_fpga: configure
 	$(BUILD) --target fpga_flash
+
+test: configure
+	$(BUILD) --target fpga_test
 

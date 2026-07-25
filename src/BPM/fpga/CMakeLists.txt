@@ -9,6 +9,7 @@
 ###################################################################################################
 
 # 7/23/26  Edward Speer  Initial revision
+# 7/24/26  Edward Speer  Add module testbench targets
 
 ###################################################################################################
 #  BUILD DIRECTIVES
@@ -41,6 +42,22 @@ find_program(
 )
 
 find_program(
+    IVERILOG_EXECUTABLE
+    NAMES iverilog
+    PATHS "${OSS_CAD_ROOT}/bin"
+    NO_DEFAULT_PATH
+    REQUIRED
+)
+
+find_program(
+    VVP_EXECUTABLE
+    NAMES vvp
+    PATHS "${OSS_CAD_ROOT}/bin"
+    NO_DEFAULT_PATH
+    REQUIRED
+)
+
+find_program(
     OPENFPGALOADER_EXECUTABLE
     NAMES openFPGALoader
 )
@@ -49,27 +66,30 @@ find_program(
 ### LOCAL VARIABLES ###
 
 set(FPGA_TOP digir_bpm_top)
+set(FPGA_RTL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rtl)
+set(FPGA_TB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tb)
 
 file(GLOB_RECURSE FPGA_RTL
-    CONFIGURE DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/rtl/*.sv"
+    CONFIGURE_DEPENDS
+    "${FPGA_RTL_DIR}/*.sv"
+)
+
+file(GLOB_RECURSE FPGA_TESTBENCHES
+    CONFIGURE_DEPENDS
+    "${FPGA_TB_DIR}/*_tb.sv"
 )
 
 set(FPGA_CONSTRAINTS ${CMAKE_CURRENT_SOURCE_DIR}/constraints/ecp5_evn.lpf)
-
 set(FPGA_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}")
-
+set(FPGA_SIM_BUILD_DIR "${FPGA_BUILD_DIR}/sim")
 set(FPGA_YOSYS_SCRIPT "${FPGA_BUILD_DIR}/${FPGA_TOP}.ys")
-
 set(FPGA_JSON "${FPGA_BUILD_DIR}/${FPGA_TOP}.json")
-
 set(FPGA_CONFIG "${FPGA_BUILD_DIR}/${FPGA_TOP}.config")
-
 set(FPGA_BITSTREAM "${FPGA_BUILD_DIR}/${FPGA_TOP}.bit")
-
 set(FPGA_TIMING_REPORT "${FPGA_BUILD_DIR}/${FPGA_TOP}_timing.json")
 
 file(MAKE_DIRECTORY "${FPGA_BUID_DIR}")
+file(MAKE_DIRECTORY "${FPGA_SIM_BUILD_DIR}")
 
 
 ### GENERATE YOSYS SYNTHESIS SCRIPT ###
@@ -229,3 +249,84 @@ else()
         "fpga_program and fpga_flash will not be available"
     )
 endif()
+
+
+### BUILD TESTBENCHES ###
+
+add_custom_target(fpga_test)
+
+foreach(TESTBENCH_SOURCE IN LISTS FPGA_TESTBENCHES)
+
+    # Extract the module name identifying both the rtl and the testbench
+    get_filename_component(
+        TESTBENCH_MODULE
+        "${TESTBENCH_SOURCE}"
+        NAME_WE
+    )
+    string(
+        REGEX REPLACE
+        "_tb$"
+        ""
+        MODULE_NAME
+        "${TESTBENCH_MODULE}"
+    )
+
+    # Compiled Icarus simulation output
+    set(SIM_EXECUTABLE "${FPGA_SIM_BUILD_DIR}/${TESTBENCH_MODULE}.vvp")
+
+    # Create CMake target names for each testbench. Format: fpga_compile_module_tb fpga_test_module
+    set(COMPILE_TARGET "fpga_compile_${MODULE_NAME}_tb")
+    set(TEST_TARGET "fpga_test_${MODULE_NAME}")
+
+
+    ### COMPILE SIMULATION ###
+
+    add_custom_command(
+        OUTPUT "${SIM_EXECUTABLE}"
+
+        COMMAND
+            "${IVERILOG_EXECUTABLE}"
+            -g2012
+            -Wall
+            -s "${TESTBENCH_MODULE}"
+            -o "${SIM_EXECUTABLE}"
+            ${FPGA_RTL}
+            "${TESTBENCH_SOURCE}"
+
+        DEPENDS
+            ${FPGA_RTL}
+            "${TESTBENCH_SOURCE}"
+
+        COMMENT
+            "Compiling FPGA testbench ${TESTBENCH_MODULE}"
+
+        VERBATIM
+    )
+
+    ### RUN SIMULATION ###
+    add_custom_target(
+        "${TEST_TARGET}"
+
+        COMMAND
+            "${VVP_EXECUTABLE}"
+            "${SIM_EXECUTABLE}"
+
+        DEPENDS
+            "${SIM_EXECUTABLE}"
+
+        COMMENT
+            "Running FPGA testbench ${TESTBENCH_MODULE}"
+
+        USES_TERMINAL
+        VERBATIM
+    )
+
+    ### ADD TEST TO AGGREGATE TARGET ###
+
+    add_dependencies(
+        fpga_test
+        "${TEST_TARGET}"
+    )
+
+endforeach()
+
