@@ -37,7 +37,7 @@ module digir_bpm_top #(
     input  logic                       mcu_spi_sclk,           // SPI serial clock
     input  logic                       mcu_spi_cs,             // SPI chip select
     input  logic                       mcu_spi_mosi,           // SPI MOSI
-    input  logic                       mcu_spi_miso,           // SPI MISO
+    output logic                       mcu_spi_miso,           // SPI MISO
 
     // MCU IRQ lines
     output logic                       mcu_irq,                // MCU IRQ 

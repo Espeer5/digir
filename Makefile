@@ -10,6 +10,7 @@
 
 # 7/23/26  Edward Speer  Initial revision
 # 7/24/26  Edward Speer  Add test recipe
+# 7/27/26  Edward Speer  Add firmware recipe
 
 ###################################################################################################
 #  RECIPES
@@ -21,10 +22,12 @@ BUILD     := cmake --build $(BUILD_DIR)
 
 .PHONY: all configure synth pnr bitstream program_fpga flash_fpga clean
 
-all: bitstream
+all: bitstream firmware
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf src/BPM/mcu/digir_bpm_fw/CM4/build
+	rm -rf src/BPM/mcu/digir_bpm_fw/CM7/build
 
 configure:
 	$(CONFIGURE)
@@ -46,4 +49,7 @@ flash_fpga: configure
 
 test: configure
 	$(BUILD) --target fpga_test
+
+firmware: configure
+	$(BUILD) --target firmware
 

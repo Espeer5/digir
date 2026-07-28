@@ -1,1 +1,5 @@
 build
+src/BPM/mcu/digir_bpm_fw/CM4/build
+src/BPM/mcu/digir_bpm_fw/CM4/build
+*.swp
+

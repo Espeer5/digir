@@ -9,6 +9,7 @@
 ###################################################################################################
 
 # 7/23/26  Edward Speer  Initial Revision
+# 7/27/26  Edward Speer  include ExternalProject for STM32 FW build
 
 ###################################################################################################
 #  BUILD DIRECTIVES
@@ -21,6 +22,8 @@ project(
     VERSION 0.1.0
     LANGUAGES NONE
 )
+
+include(ExternalProject)
 
 # Load the local config for the host system
 set(

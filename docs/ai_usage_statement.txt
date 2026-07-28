@@ -76,5 +76,9 @@ document.
 | 07/25/26 | GPT 5.6 | Discussion of general design  | Referred to generic documents about PI     |
 |          |         | of time servo.                | control that were too basic, but provided  |
 |          |         |                               | useful guidance on fixed-point usage.      |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 07/27/26 | GPT 5.6 | Toolchain setup for STM32 FW  | Yes, I used it for some CMake debugging.   |
+|          |         |                               | Yes, that's slightly against the policy.   |
+|          |         |                               | But now everything builds and I'm happy.   |
  -------------------------------------------------------------------------------------------------
 
