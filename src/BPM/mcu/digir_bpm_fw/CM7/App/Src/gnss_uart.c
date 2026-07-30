@@ -12,6 +12,7 @@
 //#################################################################################################
 
 // 7/29/26  Edward Speer  Initial Revision
+// 7/20/26  Edward Speer  Add NMEA parsing
 
 //#################################################################################################
 //  INCLUDES
@@ -54,7 +55,7 @@ void gnss_uart_reader_init(gnss_uart_reader_t *reader, UART_HandleTypeDef *uart_
     reader->uart_handle  = uart_handle;
     reader->nmea_index   = 0;
 
-    memset(&reader->nmea_buffer, 0, NMEA_SENTENCE_MAX_LEN);
+    memset(&reader->nmea_buffer, '\n', NMEA_SENTENCE_MAX_LEN);
 
     // Arm the GNSS UART interrupt
     if (HAL_UART_Receive_IT(uart_handle, &reader->read_byte, 1U) != HAL_OK)
@@ -79,8 +80,8 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
         if (reader->read_byte == NMEA_START_BYTE)
         {
             // Begin reading a new sentence
-            reader->sentence_complete = false;
-            reader->nmea_index = 0;
+            reader->new_sentence = false;
+            reader->nmea_index   = -1;
             memset(&reader->nmea_buffer, '\n', NMEA_SENTENCE_MAX_LEN);
             reader->reader_state = GNSS_UART_STATE_READING;
         } else 
@@ -91,18 +92,18 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
     else if (reader->reader_state == GNSS_UART_STATE_READING && reader->read_byte == NMEA_END_BYTE)
     {
         reader->reader_state      = GNSS_UART_STATE_WAITING;
-        reader->sentence_complete = true;
-    }
-
-    if (++reader->nmea_index >= NMEA_SENTENCE_MAX_LEN)
-    {
-        // TODO: error handling strategy
-        return;
-    }
+        reader->prev_sentence     = nmea_bytes_to_sentence(reader->nmea_buffer);
+        reader->new_sentence      = true;
+    } 
 
     // Read byte into current NMEA sentence
     if (read_byte)
     {
+        if (++reader->nmea_index >= NMEA_SENTENCE_MAX_LEN)
+        {
+            // TODO: error handling strategy
+            return;
+        }
         reader->nmea_buffer[reader->nmea_index] = reader->read_byte;
     }
 
@@ -114,14 +115,13 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
     }
 }
 
-bool gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader, uint8_t *buffer)
+bool gnss_uart_reader_new_sentence(gnss_uart_reader_t *reader)
 {
-    if (reader->sentence_complete)
-    {
-        memcpy(buffer, &reader->nmea_buffer, reader->nmea_index + 1);
-        reader->sentence_complete = false;
-        return true;
-    }
-    return false;
+    return reader->new_sentence;
+}
+
+nmea_sentence_t gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader)
+{
+    return reader->prev_sentence;
 }
 

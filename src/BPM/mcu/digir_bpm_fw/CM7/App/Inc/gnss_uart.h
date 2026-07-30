@@ -12,6 +12,7 @@
 //#################################################################################################
 
 // 7/29/26  Edward Speer  Initial revision
+// 7/20/26  Edward Speer  Add NMEA sentence parsing
 
 #ifndef GNSS_UART_H
 #define GNSS_UART_H 
@@ -23,15 +24,7 @@
 #include <stdbool.h>
 
 #include "stm32h7xx_hal.h"
-
-//#################################################################################################
-//  CONSTANTS
-//#################################################################################################
-
-#define NMEA_SENTENCE_MAX_LEN 82   // Longest allowed NMEA sentence length, in bytes
-#define NMEA_START_BYTE       0x36 // Starting byte of an NMEA sentence
-#define NMEA_END_BYTE         0x0A // Ending byte of an NMEA sentence
-
+#include "nmea_parser.h"
 
 //#################################################################################################
 //  STRUCTURES
@@ -50,9 +43,10 @@ typedef struct {
     GNSS_UART_STATE_E  reader_state;
     UART_HandleTypeDef *uart_handle;
     uint8_t            read_byte;
-    bool               sentence_complete;
+    bool               new_sentence;
     uint8_t            nmea_index;
     uint8_t            nmea_buffer[NMEA_SENTENCE_MAX_LEN];
+    nmea_sentence_t    prev_sentence;
 } gnss_uart_reader_t;
 
 //#################################################################################################
@@ -68,9 +62,11 @@ void gnss_uart_reader_init(gnss_uart_reader_t *reader, UART_HandleTypeDef *uart_
 // Handle a singal byte received over UART from the GNSS module
 void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader);
 
-// Get the nmea sentence from the gnss_uart_reader. Returns true if sentence was complete and
-// written into buffer, false otherwise.
-bool gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader, uint8_t *buffer);
+// Returns true if there's a new sentence to handle
+bool gnss_uart_reader_new_sentence(gnss_uart_reader_t *reader);
+
+// Get the nmea sentence from the gnss_uart_reader.
+nmea_sentence_t gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader);
 
 #endif // #ifndef GNSS_UART_H
 

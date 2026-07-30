@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "gnss_uart.h"
+#include "nmea_parser.h"
 
 /* USER CODE END Includes */
 
@@ -153,19 +154,25 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
 
   uint32_t complete_sentences = 0;
+  volatile  nmea_sentence_t prev_sentence;
 
   while (1)
   {
     /* USER CODE END WHILE */
 
-    uint8_t  nmea_buffer[NMEA_SENTENCE_MAX_LEN];
-    if (gnss_uart_reader_get_sentence(get_gnss_uart_reader(), nmea_buffer))
+    if (gnss_uart_reader_new_sentence(get_gnss_uart_reader()))
     {
+        prev_sentence = gnss_uart_reader_get_sentence(get_gnss_uart_reader());
         complete_sentences++;
+        if (prev_sentence.talker_id == NMEA_TALKER_ID_UNKNOWN || prev_sentence.sentence_type == NMEA_SENTENCE_TYPE_UNKNOWN)
+        {
+            break;
+        }
     }
-
     /* USER CODE BEGIN 3 */
   }
+  complete_sentences = 0;
+
   /* USER CODE END 3 */
 }
 
