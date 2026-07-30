@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "gnss_uart.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -143,29 +145,23 @@ Error_Handler();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  gnss_uart_reader_init(get_gnss_uart_reader(), &huart1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  static volatile uint8_t gnss_byte;
-  static volatile uint32_t gnss_bytes;
-  static volatile uint32_t gnss_timeouts;
+  uint32_t complete_sentences = 0;
 
   while (1)
   {
     /* USER CODE END WHILE */
 
-    HAL_StatusTypeDef status =
-        HAL_UART_Receive(&huart1, (uint8_t *)&gnss_byte, 1, 1000);
-
-    if (status == HAL_OK)
+    uint8_t  nmea_buffer[NMEA_SENTENCE_MAX_LEN];
+    if (gnss_uart_reader_get_sentence(get_gnss_uart_reader(), nmea_buffer))
     {
-        gnss_bytes++;
-    }
-    else if (status == HAL_TIMEOUT)
-    {
-        gnss_timeouts++;
+        complete_sentences++;
     }
 
     /* USER CODE BEGIN 3 */
