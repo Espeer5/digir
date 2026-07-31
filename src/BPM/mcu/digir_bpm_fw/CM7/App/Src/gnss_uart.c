@@ -12,7 +12,8 @@
 //#################################################################################################
 
 // 7/29/26  Edward Speer  Initial Revision
-// 7/20/26  Edward Speer  Add NMEA parsing
+// 7/30/26  Edward Speer  Add NMEA parsing
+// 7/31/26  Edward Speer  Add error handling
 
 //#################################################################################################
 //  INCLUDES
@@ -20,7 +21,9 @@
 
 #include <string.h>
 
+#include "log.h"
 #include "gnss_uart.h"
+#include "system_control.h"
 
 //#################################################################################################
 //  GLOBALS
@@ -41,14 +44,14 @@ void gnss_uart_reader_init(gnss_uart_reader_t *reader, UART_HandleTypeDef *uart_
 {
     if (reader == NULL)
     {
-        // TODO: error handling strategy
-        return;
+        log_crit("GNSS UART handle was NULL");
+        fatal_err();
     }
 
     if (uart_handle == NULL)
     {
-        // TODO: error handling strategy
-        return;
+        log_crit("GNSS UART handle was NULL");
+        fatal_err();
     }
 
     reader->reader_state = GNSS_UART_STATE_WAITING;
@@ -60,8 +63,8 @@ void gnss_uart_reader_init(gnss_uart_reader_t *reader, UART_HandleTypeDef *uart_
     // Arm the GNSS UART interrupt
     if (HAL_UART_Receive_IT(uart_handle, &reader->read_byte, 1U) != HAL_OK)
     {
-        // TODO: error handling strategy
-        return;
+        log_crit("GNSS UART IT arm failed");
+        fatal_err();
     }
 }
 
@@ -69,8 +72,8 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
 {   
     if (reader == NULL)
     {
-        // TODO: error handling strategy
-        return;
+        log_crit("GNSS UART reader handle was NULL");
+        fatal_err();
     }
 
     bool read_byte = true;
@@ -101,7 +104,7 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
     {
         if (++reader->nmea_index >= NMEA_SENTENCE_MAX_LEN)
         {
-            // TODO: error handling strategy
+            log_warn("GNSS reader received sentence longer than max length");
             return;
         }
         reader->nmea_buffer[reader->nmea_index] = reader->read_byte;
@@ -110,8 +113,8 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
     // Re-arm the GNSS UART interrupt
     if (HAL_UART_Receive_IT(reader->uart_handle, &reader->read_byte, 1U) != HAL_OK)
     {
-        // TODO: error handling strategy
-        return;
+        log_crit("Re-arming GNSS UART IT failed");
+        fatal_err();
     }
 }
 
@@ -122,6 +125,7 @@ bool gnss_uart_reader_new_sentence(gnss_uart_reader_t *reader)
 
 nmea_sentence_t gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader)
 {
+    reader->new_sentence = false;
     return reader->prev_sentence;
 }
 

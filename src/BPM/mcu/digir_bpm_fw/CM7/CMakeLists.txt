@@ -61,6 +61,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/gnss_uart.c
     ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/hal_callbacks.c
     ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/nmea_parser.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/system_control.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/log.c
 )
 
 # Link directories setup
