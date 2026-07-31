@@ -80,5 +80,16 @@ document.
 | 07/27/26 | GPT 5.6 | Toolchain setup for STM32 FW  | Yes, I used it for some CMake debugging.   |
 |          |         |                               | Yes, that's slightly against the policy.   |
 |          |         |                               | But now everything builds and I'm happy.   |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 07/29/26 | GPT 5.6 | STM32 interrupt handlers      | I didn't really want to dig through the    |
+|          |         |                               | generated code to see how to capture and   |
+|          |         |                               | handle UART interrupts. GPT was able to    |
+|          |         |                               | tell me where the code was easily.         |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 07/30/36 | GPT 5.5 | NMEA format/protocol          | GPT pointed me to                          |
+|          |         |                               | https://gpsd.gitlab.io/gpsd/NMEA.html      |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 07/31/26 | GPT 5.6 | Syntax for writing to UART3   | Yeah I could've check the HAL docs but how |
+|          |         |                               | much would that really have taught me?     |
  -------------------------------------------------------------------------------------------------
 
