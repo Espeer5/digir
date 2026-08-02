@@ -14,16 +14,20 @@
 // 7/29/26  Edward Speer  Initial Revision
 // 7/30/26  Edward Speer  Add NMEA parsing
 // 7/31/26  Edward Speer  Add error handling
+// 7/31/26  Edward Speer  Use task handling workflow
+// 8/1/26   Edward Speer  Double buffered byte array outputs
 
 //#################################################################################################
 //  INCLUDES
 //#################################################################################################
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "log.h"
 #include "gnss_uart.h"
 #include "system_control.h"
+#include "task_manager.h"
 
 //#################################################################################################
 //  GLOBALS
@@ -54,11 +58,19 @@ void gnss_uart_reader_init(gnss_uart_reader_t *reader, UART_HandleTypeDef *uart_
         fatal_err();
     }
 
-    reader->reader_state = GNSS_UART_STATE_WAITING;
-    reader->uart_handle  = uart_handle;
-    reader->nmea_index   = 0;
+    reader->reader_state      = GNSS_UART_STATE_WAITING;
+    reader->uart_handle       = uart_handle;
+    reader->nmea_index        = 0;
+    reader->nmea_buffer_index = false;
 
-    memset(&reader->nmea_buffer, '\n', NMEA_SENTENCE_MAX_LEN);
+    reader->nmea_buffers[0] = calloc(NMEA_SENTENCE_MAX_LEN, sizeof(uint8_t));
+    reader->nmea_buffers[1] = calloc(NMEA_SENTENCE_MAX_LEN, sizeof(uint8_t));
+
+    if (reader->nmea_buffers[0] == NULL || reader->nmea_buffers[1] == NULL)
+    {
+        log_crit("Failed to allocate nmea buffers");
+        fatal_err();
+    }
 
     // Arm the GNSS UART interrupt
     if (HAL_UART_Receive_IT(uart_handle, &reader->read_byte, 1U) != HAL_OK)
@@ -66,6 +78,12 @@ void gnss_uart_reader_init(gnss_uart_reader_t *reader, UART_HandleTypeDef *uart_
         log_crit("GNSS UART IT arm failed");
         fatal_err();
     }
+}
+
+void gnss_uart_reader_free(gnss_uart_reader_t *reader)
+{
+    free(reader->nmea_buffers[0]);
+    free(reader->nmea_buffers[1]);
 }
 
 void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
@@ -76,39 +94,7 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
         fatal_err();
     }
 
-    bool read_byte = true;
-
-    if (reader->reader_state == GNSS_UART_STATE_WAITING)
-    {
-        if (reader->read_byte == NMEA_START_BYTE)
-        {
-            // Begin reading a new sentence
-            reader->new_sentence = false;
-            reader->nmea_index   = -1;
-            memset(&reader->nmea_buffer, '\n', NMEA_SENTENCE_MAX_LEN);
-            reader->reader_state = GNSS_UART_STATE_READING;
-        } else 
-        {
-            read_byte = false;
-        }
-    }
-    else if (reader->reader_state == GNSS_UART_STATE_READING && reader->read_byte == NMEA_END_BYTE)
-    {
-        reader->reader_state      = GNSS_UART_STATE_WAITING;
-        reader->prev_sentence     = nmea_bytes_to_sentence(reader->nmea_buffer);
-        reader->new_sentence      = true;
-    } 
-
-    // Read byte into current NMEA sentence
-    if (read_byte)
-    {
-        if (++reader->nmea_index >= NMEA_SENTENCE_MAX_LEN)
-        {
-            log_warn("GNSS reader received sentence longer than max length");
-            return;
-        }
-        reader->nmea_buffer[reader->nmea_index] = reader->read_byte;
-    }
+    uint8_t new_byte = reader->read_byte;
 
     // Re-arm the GNSS UART interrupt
     if (HAL_UART_Receive_IT(reader->uart_handle, &reader->read_byte, 1U) != HAL_OK)
@@ -116,16 +102,52 @@ void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader)
         log_crit("Re-arming GNSS UART IT failed");
         fatal_err();
     }
+
+    if (reader->reader_state == GNSS_UART_STATE_WAITING)
+    {
+        if (new_byte  == NMEA_START_BYTE)
+        {
+            // Begin reading a new sentence
+            memset(reader->nmea_buffers[reader->nmea_buffer_index], '\n', NMEA_SENTENCE_MAX_LEN);
+
+            reader->nmea_index   = 0;
+            reader->reader_state = GNSS_UART_STATE_READING;
+
+            reader->nmea_buffers[reader->nmea_buffer_index][reader->nmea_index] = new_byte;
+            return;
+        }
+        // Not currently reading anything -- in between sentences
+        return;
+    }
+
+    // Read byte into current NMEA sentence
+    if (++reader->nmea_index >= NMEA_SENTENCE_MAX_LEN)
+    {
+        log_warn("GNSS reader received sentence longer than max length");
+    }
+    else
+    {
+        reader->nmea_buffers[reader->nmea_buffer_index][reader->nmea_index] = new_byte;
+    }
+
+    if (new_byte == NMEA_END_BYTE)
+    {
+        reader->reader_state = GNSS_UART_STATE_WAITING;
+        reader->nmea_buffer_index = !reader->nmea_buffer_index;
+        task_manager_set_task(get_global_task_manager(), TASK_ID_GNSS_UPDATE); 
+    } 
+
 }
 
-bool gnss_uart_reader_new_sentence(gnss_uart_reader_t *reader)
+void gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader, uint8_t *output)
 {
-    return reader->new_sentence;
-}
+    // CRITICAL SECTION -- IRQs can overwrite index and change sentence during cpy
+    uint32_t primask = __get_PRIMASK();
+    __disable_irq();
 
-nmea_sentence_t gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader)
-{
-    reader->new_sentence = false;
-    return reader->prev_sentence;
+    memcpy(output, reader->nmea_buffers[!reader->nmea_buffer_index], NMEA_SENTENCE_MAX_LEN);
+
+    __set_PRIMASK(primask);
+    // END CRITICAL SECTION
 }
 

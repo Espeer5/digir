@@ -13,9 +13,10 @@
 
 // 7/29/26  Edward Speer  Initial revision
 // 7/20/26  Edward Speer  Add NMEA sentence parsing
+// 8/1/26   Edward Speer  Double buffered byte array outputs
 
 #ifndef GNSS_UART_H
-#define GNSS_UART_H 
+#define GNSS_UART_H
 
 //#################################################################################################
 //  INCLUDES
@@ -43,10 +44,9 @@ typedef struct {
     GNSS_UART_STATE_E  reader_state;
     UART_HandleTypeDef *uart_handle;
     uint8_t            read_byte;
-    bool               new_sentence;
     uint8_t            nmea_index;
-    uint8_t            nmea_buffer[NMEA_SENTENCE_MAX_LEN];
-    nmea_sentence_t    prev_sentence;
+    bool               nmea_buffer_index;
+    uint8_t            *nmea_buffers[NMEA_SENTENCE_MAX_LEN];
 } gnss_uart_reader_t;
 
 //#################################################################################################
@@ -59,14 +59,14 @@ gnss_uart_reader_t *get_gnss_uart_reader(void);
 // Initialize a new GNSS UART reader on the specified UART handle. 
 void gnss_uart_reader_init(gnss_uart_reader_t *reader, UART_HandleTypeDef *uart_handle);
 
+// Destroy GNSS UART reader and free all resources
+void gnss_uart_reader_free(gnss_uart_reader_t *reader);
+
 // Handle a singal byte received over UART from the GNSS module
 void gnss_uart_reader_handle_byte(gnss_uart_reader_t *reader);
 
-// Returns true if there's a new sentence to handle
-bool gnss_uart_reader_new_sentence(gnss_uart_reader_t *reader);
-
-// Get the nmea sentence from the gnss_uart_reader.
-nmea_sentence_t gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader);
+// Get the current sentence from the GNSS UART reader. 
+void gnss_uart_reader_get_sentence(gnss_uart_reader_t *reader, uint8_t *output);
 
 #endif // #ifndef GNSS_UART_H
 

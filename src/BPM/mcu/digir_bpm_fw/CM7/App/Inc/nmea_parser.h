@@ -32,6 +32,8 @@
 #define NMEA_END_BYTE                0x0A
 #define NMEA_TALKER_ID_LEN_BYTES     2
 #define NMEA_SENTENCE_TYPE_LEN_BYTES 3
+#define NMEA_DATA_MAX_LEN            (NMEA_SENTENCE_MAX_LEN - NMEA_TALKER_ID_LEN_BYTES - \
+                                      NMEA_SENTENCE_TYPE_LEN_BYTES)
 
 //#################################################################################################
 //  STRUCTURES
@@ -65,6 +67,9 @@ typedef struct
 {
     NMEA_TALKER_ID_E     talker_id;
     NMEA_SENTENCE_TYPE_E sentence_type;
+    uint64_t             utc_second;
+    int64_t              lat_deg_e7;
+    int64_t              lon_deg_e7;
 } nmea_sentence_t;
 
 

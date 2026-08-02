@@ -25,6 +25,7 @@
 #include "log.h"
 #include "gnss_uart.h"
 #include "nmea_parser.h"
+#include "task_manager.h"
 
 /* USER CODE END Includes */
 
@@ -157,29 +158,17 @@ Error_Handler();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   set_global_log_handle(&huart3);
-  uint32_t complete_sentences = 0;
-  volatile  nmea_sentence_t prev_sentence;
+  task_manager_init(get_global_task_manager());
 
   log_info("Starting up DigiR...");
 
   while (1)
   {
-    if (gnss_uart_reader_new_sentence(get_gnss_uart_reader()))
-    {
-        prev_sentence = gnss_uart_reader_get_sentence(get_gnss_uart_reader());
-        complete_sentences++;
-        if (prev_sentence.talker_id == NMEA_TALKER_ID_UNKNOWN || prev_sentence.sentence_type == NMEA_SENTENCE_TYPE_UNKNOWN)
-        {
-            log_warn("NMEA parsing failed on GNSS input");
-            break;
-        }
-        log_info("New NMEA sentence read and parsed successfully");
-    }
+    task_manager_run(get_global_task_manager());
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
-  complete_sentences = 0;
 
   /* USER CODE END 3 */
 }
