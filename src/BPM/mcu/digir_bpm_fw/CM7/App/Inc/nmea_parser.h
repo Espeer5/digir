@@ -67,7 +67,9 @@ typedef struct
 {
     NMEA_TALKER_ID_E     talker_id;
     NMEA_SENTENCE_TYPE_E sentence_type;
-    uint64_t             utc_second;
+    int64_t              unix_second;
+    bool                 ts_valid;
+    int32_t              fractional_seconds;
     int64_t              lat_deg_e7;
     int64_t              lon_deg_e7;
 } nmea_sentence_t;

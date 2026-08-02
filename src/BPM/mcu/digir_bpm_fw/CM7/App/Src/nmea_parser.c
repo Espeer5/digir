@@ -23,6 +23,7 @@
 #include <stdbool.h>
 
 #include "nmea_parser.h"
+#include "calendar.h"
 #include "log.h"
 
 //#################################################################################################
@@ -150,6 +151,67 @@ static bool extract_from_gga_data(nmea_sentence_t *sentence, uint8_t *data_bytes
     return true;
 }
 
+static bool extract_from_rmc_data(nmea_sentence_t *sentence, uint8_t *data_bytes)
+{
+    // RMC data format: hhmmss.ss, A, ddmm.mm, a, ddmm.mm, a, x.x, x.x, ddmmyy
+    //                  (UTC)    (valid)  (lat)       (lon)   (sp) (trk) (date)
+    // RMC is the most useful sentence, giving full UTC timestamp and location
+
+    uint8_t *pos = data_bytes;
+
+    // Read the timestamp in and convert to seconds
+    int64_t utc_seconds = 0;
+
+    utc_seconds += 60 * 60 * 10 * (*pos++ - '0'); // 10's place hours
+    utc_seconds += 60 * 60 * (*pos++ - '0');      // 1's place hours
+
+    utc_seconds += 60 * 10 * (*pos++ - '0');      // 10's place minutes
+    utc_seconds += 60 * (*pos++ - '0');           // 1's place minutes
+
+    utc_seconds += 10 * (*pos++ - '0');           // 10's place seconds
+    utc_seconds += *pos++ - '0';                  // 1's place seconds
+
+    // advance the pointer past '.'
+    pos++;
+
+    int fractional_seconds = 0;
+    fractional_seconds += 100 * (*pos++ - '0'); // tenths of seconds
+    fractional_seconds += 10 * (*pos++ - '0');  // hundreths of seconds
+    fractional_seconds += *pos++ - '0';         // thousandths of seconds
+    sentence->fractional_seconds = fractional_seconds;
+
+    // advance the pointer past the comma
+    pos++;
+    
+    sentence->ts_valid = *pos++ == 'A' ? true : false;
+
+    // advance the pointer past the comma
+    pos++;
+
+    // Will advance the pos pointer to the end of the lat data
+    sentence->lat_deg_e7 = compute_deg_e7(&pos, 2);
+    sentence->lon_deg_e7 = compute_deg_e7(&pos, 3);
+
+    // advance the pointer past x.x,x.x,
+    pos += 12;
+
+    int year  = 2000;
+    int month = 0;
+    int day   = 0;
+
+    day += 10 * (*pos++ - '0');   // 10's place days
+    day += *pos++ - '0';          // 1's place days
+
+    month += 10 * (*pos++ - '0'); // 10's place months
+    month += *pos++ - '0';        // 1's place months
+
+    year += 10 * (*pos++ - '0');  // 10's place years
+    year += *pos++ - '0';         // 1's place years
+
+    utc_to_unix_seconds(year, month, day, utc_seconds, &sentence->unix_second);
+    return true;
+}
+
 nmea_sentence_t nmea_bytes_to_sentence(uint8_t bytes[NMEA_SENTENCE_MAX_LEN])
 {
     nmea_sentence_t sentence = {0};
@@ -164,9 +226,24 @@ nmea_sentence_t nmea_bytes_to_sentence(uint8_t bytes[NMEA_SENTENCE_MAX_LEN])
 
     switch (sentence.sentence_type)
     {
-        case NMEA_SENTENCE_TYPE_FIXED_DATA:
+        case NMEA_SENTENCE_TYPE_FIXED_DATA:   // GGA
         {
             extract_from_gga_data(&sentence, &bytes[7]);
+            break;
+        }
+        case NMEA_SENTENCE_TYPE_DOP:          // GSA 
+        {
+            // DOP currently not useful
+            break;
+        }
+        case NMEA_SENTENCE_TYPE_SAT_VIEW:     // GSV
+        {
+            // Sats in view curently not useful
+            break;
+        }
+        case NMEA_SENTENCE_TYPE_MIN_GPS_DATA: // RMC
+        {
+            extract_from_rmc_data(&sentence, &bytes[7]);
             break;
         }
         default:
