@@ -72,6 +72,7 @@ typedef struct
     int32_t              fractional_seconds;
     int64_t              lat_deg_e7;
     int64_t              lon_deg_e7;
+    bool                 loc_valid;
 } nmea_sentence_t;
 
 

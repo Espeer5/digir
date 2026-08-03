@@ -131,6 +131,7 @@ static bool extract_from_gga_data(nmea_sentence_t *sentence, uint8_t *data_bytes
 {
     // GGA data format: hhmmss.ss, ddmm.mm, a, ddmm.mm, a, quality, sat info
     // GGA doesn't include date info, so we don't use it for time, only location
+    sentence->ts_valid = false;
 
     // First find the start of the latitude after the first comma
     uint8_t *pos = data_bytes;
@@ -147,6 +148,7 @@ static bool extract_from_gga_data(nmea_sentence_t *sentence, uint8_t *data_bytes
     // Will advance the pos pointer to the end of the lat data
     sentence->lat_deg_e7 = compute_deg_e7(&pos, 2);
     sentence->lon_deg_e7 = compute_deg_e7(&pos, 3);
+    sentence->loc_valid = true;
 
     return true;
 }
@@ -191,6 +193,7 @@ static bool extract_from_rmc_data(nmea_sentence_t *sentence, uint8_t *data_bytes
     // Will advance the pos pointer to the end of the lat data
     sentence->lat_deg_e7 = compute_deg_e7(&pos, 2);
     sentence->lon_deg_e7 = compute_deg_e7(&pos, 3);
+    sentence->loc_valid = true;
 
     // advance the pointer past x.x,x.x,
     pos += 12;
@@ -209,6 +212,7 @@ static bool extract_from_rmc_data(nmea_sentence_t *sentence, uint8_t *data_bytes
     year += *pos++ - '0';         // 1's place years
 
     utc_to_unix_seconds(year, month, day, utc_seconds, &sentence->unix_second);
+    sentence->ts_valid = true;
     return true;
 }
 

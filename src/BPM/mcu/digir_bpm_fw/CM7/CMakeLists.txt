@@ -65,6 +65,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/log.c
     ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/task_manager.c
     ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/calendar.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/App/Src/global_state.c
 )
 
 # Link directories setup

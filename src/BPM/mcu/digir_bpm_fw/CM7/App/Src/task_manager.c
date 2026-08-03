@@ -12,6 +12,7 @@
 
 // 7/31/26  Edward Speer  Initial revision
 // 8/1/26   Edward Speer  Parse NMEA snapshots from GNSS
+// 8/2/26   Edward Speer  Mutate global state cache
 
 //#################################################################################################
 //  INCLUDES
@@ -22,6 +23,7 @@
 #include "nmea_parser.h"
 #include "gnss_uart.h"
 #include "system_control.h"
+#include "global_state.h"
 
 //#################################################################################################
 //  GLOBALS
@@ -70,10 +72,10 @@ void task_manager_run(task_manager_t *task_manager)
     {
         log_debug("Task manager handling GNSS update");
 
-        // TODO: handle event proper
         uint8_t nmea_sentence_bytes[NMEA_SENTENCE_MAX_LEN];
         gnss_uart_reader_get_sentence(get_gnss_uart_reader(), nmea_sentence_bytes);
         nmea_sentence_t sentence = nmea_bytes_to_sentence(nmea_sentence_bytes);
+        update_global_gnss_state(get_global_state(), sentence);
     }
 
     task_manager->task_mask = 0;

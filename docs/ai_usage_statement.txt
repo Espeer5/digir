@@ -91,5 +91,9 @@ document.
 |----------|---------|-------------------------------|--------------------------------------------|
 | 07/31/26 | GPT 5.6 | Syntax for writing to UART3   | Yeah I could've check the HAL docs but how |
 |          |         |                               | much would that really have taught me?     |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 08/02/26 | GPT 5.6 | Use of PulseView for logic    | Needed instructions on which model to      |
+|          |         | analyzer model.               | select in the menu since my analyzer is    |
+|          |         |                               | unmarked.                                  |
  -------------------------------------------------------------------------------------------------
 

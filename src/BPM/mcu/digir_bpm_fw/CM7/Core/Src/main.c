@@ -26,6 +26,7 @@
 #include "gnss_uart.h"
 #include "nmea_parser.h"
 #include "task_manager.h"
+#include "global_state.h"
 
 /* USER CODE END Includes */
 
@@ -151,6 +152,7 @@ Error_Handler();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  global_state_init(get_global_state());
   gnss_uart_reader_init(get_gnss_uart_reader(), &huart1);
 
   /* USER CODE END 2 */
