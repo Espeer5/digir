@@ -1,64 +1,48 @@
 //#################################################################################################
-//  DIGIR BPM FIRMWARE LOGGING ROUTINES
+//  DIGIR BPM MCU SPI CONTROLLER
 //
 //  VERSION 0.1
 //#################################################################################################
 
-// This module desclares logging routines used to output useful log messages via UART3 to the dev
-// host PC. These logs are useful for debugging and monitoring the system during bring-up.
+// This module declares structures and functions for SPI control logic for any SPI peripheral.
 
 //#################################################################################################
 //  CHANGE LOG
 //#################################################################################################
 
-// 7/31/26  Edward Speer  Initial revision
-// 8/10/26  Edward Speer  Support format print
+// 08/10/26  Edward Speer  Initial revision
 
-#ifndef LOG_H
-#define LOG_H
+#ifndef SPI_CTL_H
+#define SPI_CTL_H
 
 //#################################################################################################
 //  INCLUDES
 //#################################################################################################
 
 #include "stm32h7xx_hal.h"
-
-//#################################################################################################
-//  CONSTANTS
-//#################################################################################################
-
-#define LOG_MSG_MAX_LEN 127
+#include "system_control.h"
+#include "log.h"
 
 //#################################################################################################
 //  STRUCTURES
 //#################################################################################################
 
-typedef enum
-{
-    LOG_LEVEL_CRIT,
-    LOG_LEVEL_WARN,
-    LOG_LEVEL_INFO,
-    LOG_LEVEL_DEBUG,
-} LOG_LEVEL_E;
+typedef struct {
+    SPI_HandleTypeDef *spi_handle;
+    GPIO_TypeDef      *cs_handle;
+    uint16_t          cs_pin;
+} spi_controller_t;
 
 //#################################################################################################
 //  FUNCTIONS
 //#################################################################################################
 
-// Set the global logging handle
-void set_global_log_handle(UART_HandleTypeDef *uart_handle);
+// Initialize a SPI controller with the specified hardware characteristics
+void spi_controller_init(spi_controller_t *controller, SPI_HandleTypeDef *spi_handle,
+                         GPIO_TypeDef *cs_handle, uint16_t cs_pin);
 
-// Emit a critical level log over UART3
-void log_crit(char *fmt, ...);
+// Write num_bytes out over the SPI
+void spi_controller_tx(spi_controller_t *controller, size_t len, uint8_t *bytes);
 
-// Emit a warning level log over UART3
-void log_warn(char *fmt, ...);
-
-// Emit an info level log over UART3
-void log_info(char *fmt, ...);
-
-// Emit a debug level log over UART3
-void log_debug(char *fmt, ...);
-
-#endif // #ifndef LOG_H
+#endif // #ifndef SPI_CTL_H
 

@@ -27,6 +27,7 @@
 #include "nmea_parser.h"
 #include "task_manager.h"
 #include "global_state.h"
+#include "spi_ctl.h"
 
 /* USER CODE END Includes */
 
@@ -159,6 +160,9 @@ Error_Handler();
   global_state_init(get_global_state());
   gnss_uart_reader_init(get_gnss_uart_reader(), &huart1, GNSS_INPUT_FORMAT_NMEA);
 
+  spi_controller_t spi2_control;
+  spi_controller_init(&spi2_control, &hspi2, GPIOB, GPIO_PIN_4);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -168,9 +172,20 @@ Error_Handler();
 
   log_info("Starting up DigiR...");
 
+  int cnt = 0;
   while (1)
   {
+    cnt++;
     task_manager_run(get_global_task_manager());
+    if (cnt % 100 == 0)
+    {
+      uint8_t bytes[4];
+      bytes[0] = 'D';
+      bytes[1] = 'E';
+      bytes[2] = 'A';
+      bytes[3] = 'D';
+      spi_controller_tx(&spi2_control, 4, bytes);
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -262,12 +277,12 @@ static void MX_SPI2_Init(void)
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi2.Init.CRCPolynomial = 0x0;
-  hspi2.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   hspi2.Init.NSSPolarity = SPI_NSS_POLARITY_LOW;
   hspi2.Init.FifoThreshold = SPI_FIFO_THRESHOLD_01DATA;
   hspi2.Init.TxCRCInitializationPattern = SPI_CRC_INITIALIZATION_ALL_ZERO_PATTERN;
@@ -390,16 +405,27 @@ static void MX_USART3_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
 
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOI_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
+
+  /*Configure GPIO pin : PB4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 

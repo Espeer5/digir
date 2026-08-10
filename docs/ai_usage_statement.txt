@@ -95,5 +95,9 @@ document.
 | 08/02/26 | GPT 5.6 | Use of PulseView for logic    | Needed instructions on which model to      |
 |          |         | analyzer model.               | select in the menu since my analyzer is    |
 |          |         |                               | unmarked.                                  |
+|----------|---------|-------------------------------|--------------------------------------------|
+| 08/10/26 | GPT 5.6 | Functional gaps with HW NSS   | STM32 HW NSS usage is apparently very      |
+|          |         |                               | limiting to what you can do with your FPGA |
+|          |         |                               | on the other side. Glad GPT warned me.     |
  -------------------------------------------------------------------------------------------------
 
