@@ -157,7 +157,7 @@ Error_Handler();
   /* USER CODE BEGIN 2 */
 
   global_state_init(get_global_state());
-  gnss_uart_reader_init(get_gnss_uart_reader(), &huart1);
+  gnss_uart_reader_init(get_gnss_uart_reader(), &huart1, GNSS_INPUT_FORMAT_NMEA);
 
   /* USER CODE END 2 */
 

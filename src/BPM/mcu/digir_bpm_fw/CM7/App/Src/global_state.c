@@ -11,7 +11,8 @@
 //  CHANGE LOG
 //#################################################################################################
 
-// 8/2/26  Edward Speer  Initial revision
+// 8/2/26   Edward Speer  Initial revision
+// 8/10/26  Edward Speer  GNSS input format generic
 
 //#################################################################################################
 //  INCLUDES
@@ -51,7 +52,7 @@ void global_state_init(global_state_t *state)
     init_gnss_state(global_state);
 }
 
-void update_global_gnss_state(global_state_t *global_state, nmea_sentence_t sentence)
+void update_global_gnss_state_nmea(global_state_t *global_state, nmea_sentence_t sentence)
 {
     if (sentence.ts_valid)
     {

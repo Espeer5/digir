@@ -11,7 +11,8 @@
 //  CHANGE LOG
 //#################################################################################################
 
-// 8/2/26  Edward Speer  Initial revision
+// 8/2/26  Edward Speer   Initial revision
+// 8/10/26  Edward Speer  GNSS input type generic
 
 #ifndef GLOBAL_STATE_H
 #define GLOBAL_STATE_H 
@@ -50,8 +51,8 @@ global_state_t *get_global_state(void);
 // Initialize the global state cache
 void global_state_init(global_state_t *state);
 
-// Update the global GNSS state
-void update_global_gnss_state(global_state_t *global_state, nmea_sentence_t sentence);
+// Update the global GNSS state from a parsed nmea sentence
+void update_global_gnss_state_nmea(global_state_t *global_state, nmea_sentence_t sentence);
 
 #endif // #ifndef GLOBAL_STATE_H
 

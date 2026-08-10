@@ -13,6 +13,7 @@
 // 7/31/26  Edward Speer  Initial revision
 // 8/1/26   Edward Speer  Parse NMEA snapshots from GNSS
 // 8/2/26   Edward Speer  Mutate global state cache
+// 8/10/26  Edward Speer  GNSS input type is generic
 
 //#################################################################################################
 //  INCLUDES
@@ -72,12 +73,21 @@ void task_manager_run(task_manager_t *task_manager)
     {
         log_debug("Task manager handling GNSS update");
 
-        uint8_t nmea_sentence_bytes[NMEA_SENTENCE_MAX_LEN];
-        gnss_uart_reader_get_sentence(get_gnss_uart_reader(), nmea_sentence_bytes);
-        nmea_sentence_t sentence = nmea_bytes_to_sentence(nmea_sentence_bytes);
-        update_global_gnss_state(get_global_state(), sentence);
-    }
+        gnss_uart_reader_t *reader = get_gnss_uart_reader();
 
-    task_manager->task_mask = 0;
+        switch (reader->input_format)
+        {
+            case GNSS_INPUT_FORMAT_NMEA:
+            {
+                gnss_input_t nmea_sentence_bytes;
+                while (gnss_uart_reader_get_sentence(reader, &nmea_sentence_bytes))
+                { 
+                    nmea_sentence_t sentence = nmea_bytes_to_sentence(nmea_sentence_bytes.data_buffer);
+                    update_global_gnss_state_nmea(get_global_state(), sentence);
+                }
+                break;
+            }
+        }
+    }
 }
 

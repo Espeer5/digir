@@ -10,7 +10,8 @@
 //  CHANGE LOG
 //#################################################################################################
 
-// 8/1/26  Edward Speer  Initial revision
+// 8/1/26   Edward Speer  Initial revision
+// 8/10/26  Edward Speer  Force push overwrites oldest
 
 #ifndef RINGBUFFER_H
 #define RINGBUFFER_H
@@ -62,8 +63,8 @@
                 return false;                                         \
             }                                                         \
                                                                       \
-            rb->data[rb->head] = *value;                              \
-            return true;                                              \
+            rb->tail = (rb->tail + 1) % (capacity);                   \
+            rb->count--;                                              \
         }                                                             \
                                                                       \
         rb->data[rb->head] = *value;                                  \
@@ -83,7 +84,7 @@
         rb->tail = (rb->tail + 1) % (capacity);                       \
         rb->count--;                                                  \
         return true;                                                  \
-    }                                                                 \
+    }
 
 #endif // #ifndef RINGBUFFER_H
 
