@@ -10,6 +10,7 @@
 //#################################################################################################
 
 // 7/31/26  Edward Speer  Initial revision
+// 8/10/26  Edward Speer  Support format print
 
 //#################################################################################################
 //  INCLUDES
@@ -43,14 +44,14 @@ typedef enum
 void set_global_log_handle(UART_HandleTypeDef *uart_handle);
 
 // Emit a critical level log over UART3
-void log_crit(char *msg);
+void log_crit(char *fmt, ...);
 
 // Emit a warning level log over UART3
-void log_warn(char *msg);
+void log_warn(char *fmt, ...);
 
 // Emit an info level log over UART3
-void log_info(char *msg);
+void log_info(char *fmt, ...);
 
 // Emit a debug level log over UART3
-void log_debug(char *msg);
+void log_debug(char *fmt, ...);
 

@@ -11,13 +11,15 @@
 //  CHANGE LOG
 //#################################################################################################
 
-// 7/31/26  Edward Speer Initial Revision
+// 7/31/26  Edward Speer  Initial Revision
+// 8/10/26  Edward Speer  Support format print, timestamps
 
 //#################################################################################################
 //  INCLUDES
 //#################################################################################################
 
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "log.h"
 
@@ -63,43 +65,64 @@ void set_global_log_handle(UART_HandleTypeDef *uart_handle)
     logging_handle = uart_handle;
 }
 
-void emit_log(LOG_LEVEL_E log_level, char *msg)
+void emit_log(LOG_LEVEL_E log_level, const char *fmt, va_list args)
 {
-    if (logging_handle == NULL || msg == NULL)
+    if (logging_handle == NULL || fmt == NULL)
     {
         return;
     }
 
     char message[LOG_MSG_MAX_LEN];
-    int len = snprintf(message, sizeof(message), "[%s] %s\r\n", log_level_to_str(log_level), msg);
+    int offset = 0;
 
-    if (len < 0)
+    uint32_t timestamp = HAL_GetTick();
+
+    offset += snprintf(message + offset, sizeof(message) - offset, "[%010lu][%s] ",
+                       (unsigned long)timestamp, log_level_to_str(log_level));
+
+    offset += vsnprintf(message + offset, sizeof(message) - offset, fmt, args);
+
+    offset += snprintf(message + offset, sizeof(message - offset), "\r\n");
+
+    if (offset < 0)
     {
         return;
     }
 
     // Log out to uart3
-    size_t transmit_len = (size_t)len >= sizeof(message) ? sizeof(message) - 1U : (size_t)len; 
+    size_t transmit_len = (size_t)offset >= sizeof(message) ? sizeof(message) - 1 : (size_t)offset; 
     HAL_UART_Transmit(logging_handle, (const uint8_t *)message, transmit_len, HAL_MAX_DELAY);
 }
 
-void log_crit(char *msg)
+void log_crit(char *fmt, ...)
 {
-    emit_log(LOG_LEVEL_CRIT, msg);
+    va_list args;
+    va_start(args, fmt);
+    emit_log(LOG_LEVEL_CRIT, fmt, args);
+    va_end(args);
 }
 
-void log_warn(char *msg)
+void log_warn(char *fmt, ...)
 {
-    emit_log(LOG_LEVEL_WARN, msg);
+    va_list args;
+    va_start(args, fmt);
+    emit_log(LOG_LEVEL_WARN, fmt, args);
+    va_end(args);
 }
 
-void log_info(char *msg)
+void log_info(char *fmt, ...)
 {
-    emit_log(LOG_LEVEL_INFO, msg);
+    va_list args;
+    va_start(args, fmt);
+    emit_log(LOG_LEVEL_INFO, fmt, args);
+    va_end(args);
 }
 
-void log_debug(char *msg)
+void log_debug(char *fmt, ...)
 {
-    emit_log(LOG_LEVEL_DEBUG, msg);
+    va_list args;
+    va_start(args, fmt);
+    emit_log(LOG_LEVEL_DEBUG, fmt, args);
+    va_end(args);
 }
 
