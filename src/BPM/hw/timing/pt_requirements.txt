@@ -1,0 +1,36 @@
+###################################################################################################
+#  DIGIR BPM CLOCK EVB REQUIREMENTS
+#
+#  VERSION 0.1
+###################################################################################################
+
+The clock EVB is going to be used for protoyping the timing subsystem of the baseband processing
+module. Coupled with the MCU, FPGA, and GNSS module, it should constitute a fully GNSS disciplined
+clock.
+
+###################################################################################################
+#  CHANGE LOG
+###################################################################################################
+
+8/15/26  Edward Speer  Initial revision
+
+###################################################################################################
+#  INPUTS
+###################################################################################################
+
+ - 3V3 external power input
+ - System GND
+ - Optional ref CLK in (bypasses onboard VCXO)
+
+###################################################################################################
+#  OUTPUTS
+###################################################################################################
+
+ - Raw VCXO output
+ - 2 SMA clocks out from Si5351
+ - 1 clock output on a header from Si5351
+ - Tuning voltage test point
+ - CLKIN test point (differs from VCXO out in bypass mode)
+ - Plain 3V3 test point
+ - Output clock test points
+

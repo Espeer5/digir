@@ -1,5 +1,19 @@
 build
 src/BPM/mcu/digir_bpm_fw/CM4/build
 src/BPM/mcu/digir_bpm_fw/CM4/build
-*.swp
+**/*.swp
+**/*.DS_store
 
+# PCB manufacturing files
+**/*.gtl
+**/*.g1
+**/*.g2
+**/*.gbl
+**/*.gts
+**/*.gbs
+**/*.gto
+**/*.gbo
+**/*.gm1
+**/*.drl
+**/*.gbrjob
+**/.history/
