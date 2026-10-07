@@ -4,5 +4,4 @@ The DigiR project is an effort to build a fully open source embedded mobile digi
 
 The full tool chain of the proejct will be open source, avoiding any costly software licenses or other tools out of reach of the average radio hobbyist. An exception to the open-soruce nature of the project are the STM32Cube software packages used for configuring and flashing the STM32 MCU, but these are free packages that are accessible to the hobbyist.
 
-This project is in its infancy -- see docs/pm/schedule.txt for the general project plan and schedule. 
-
+Please note that this project has been significantly delayed due to hardware availability and lead times, which have changed the scope of the project. In particular, the ECP5 development board is very hard to come by at the moment, which is changing the scope of the project. Resulting from this issue some work must now be done to design a custom ECP5 hardware module for development, aside from the eventual custom radio board, increasing both the time and expense required.
